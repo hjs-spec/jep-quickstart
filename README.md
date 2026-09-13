@@ -1,85 +1,68 @@
 # JEP Quickstart
 
-Five-minute developer quickstart for integrating a JEP Runtime into agents, tools, and workflows.
+Create signed Judgment Event Protocol events with the installed Python SDK and verify them through the local JEP-Core-0.6 API. All default examples use real signatures; the small business tools are demonstrations.
 
-## What is JEP Runtime?
+## Start a local API (terminal 1)
 
-JEP Runtime records important execution moments as portable events: agent steps, tool calls, MCP calls, and graph nodes.
-
-This repo is intentionally tiny. It uses a local mock runtime so you can see the integration shape before wiring in a real SDK.
-
-## Install
+Python 3.10 or newer is required. From the parent directory of this clone:
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/hjs-spec/jep-api.git
+cd jep-api
+git checkout v0.7.3
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -r requirements.txt
+export JEP_STATE_DIR="$PWD/.local-state"
+python -m uvicorn main:app --host 127.0.0.1 --port 8000
+```
+
+This starts a loopback development service and preserves its local verification keys across restarts. Keep that state directory to replay prior archives. This is not a live deployment; no public service or database is required. API software version 0.7.3 implements protocol profile `jep-core-0.6`, wire `jep: "1"`.
+
+The SDK defaults to `http://127.0.0.1:8000`. Set `JEP_API_URL` to another explicitly trusted API, and `JEP_API_KEY` if it requires a signing token. Archival verification relies on that API's trusted key store.
+
+## Install and run (terminal 2)
+
+```bash
+git clone https://github.com/hjs-spec/jep-quickstart.git
 cd jep-quickstart
-python3 --version
-```
-
-Install is just a clone: the quickstart uses only the Python standard library and runs directly from the repo.
-
-## First Event
-
-```python
-from jep_quickstart import create_event
-
-event = create_event(
-    kind="agent.step",
-    name="first-event",
-    input={"goal": "try JEP"},
-    output={"status": "started"},
-)
-print(event.to_dict())
-```
-
-Run it as part of the Python quickstart:
-
-```bash
-python3 examples/python_quickstart.py
-```
-
-## Wrap a Tool
-
-```python
-from jep_quickstart import wrap_tool
-
-
-def mock_search(query: str) -> dict[str, str]:
-    return {"title": "JEP Quickstart", "query": query}
-
-search = wrap_tool("mock_search", mock_search)
-result, event = search(query="how to integrate JEP")
-```
-
-More examples:
-
-- `examples/mcp_quickstart.py` wraps a mock MCP tool call and generates a JEP event.
-- `examples/langgraph_quickstart.py` runs a minimal graph-shaped node that emits a JEP event.
-- `examples/openai_agents_quickstart.py` shows pseudo middleware for OpenAI Agents tool calls.
-
-## Replay Archive
-
-Export and verify a JSONL archive:
-
-```python
-from jep_quickstart import export_archive, replay_verify
-
-archive = export_archive([event], "archives/demo.jep.jsonl")
-report = replay_verify(archive)
-print(report)
-```
-
-## One Command Demo
-
-```bash
+python3 -m venv .venv
+. .venv/bin/activate
+python -m pip install -e .
 make demo
 ```
 
-The demo runs all quickstarts and writes `archives/demo.jep.jsonl`.
+The Python example writes a uniquely named `archives/demo-*.jep.jsonl` and verifies each signed event in archival mode. Running the demo again preserves earlier archives.
 
-## Next Steps
+```python
+from jep_quickstart import create_event, export_archive, replay_verify, wrap_tool
 
-- Replace the mock runtime in `jep_quickstart/runtime.py` with the real JEP SDK.
-- Add your production tool names and inputs.
-- Store archives in CI or object storage.
-- Replay archives before changing agent prompts, tools, or graph nodes.
+event = create_event("agent.step", "first-event", {"goal": "try JEP"}, {"status": "started"})
+print(event.to_dict())
+archive = export_archive([event], "archives/first.jep.jsonl")
+print(replay_verify(archive))
+```
+
+`create_event` records application details inside a signed `J` event's `what`. `wrap_tool` calls the supplied function, then records its returned result; it does not authorize the tool or make tool execution and archive writing atomic. Handle recording failures in the application's execution policy.
+
+## Examples and verification limits
+
+- `examples/python_quickstart.py`: signed event, tool wrapper, export and real API verification.
+- `examples/mcp_quickstart.py`: simulated MCP tool with real event recording.
+- `examples/langgraph_quickstart.py`: graph-shaped function with real event recording.
+- `examples/openai_agents_quickstart.py`: illustrative middleware with real event recording.
+
+These examples do not install or execute the actual MCP, LangGraph or OpenAI Agents frameworks. Use the dedicated adapter repositories for those integrations.
+
+A successful report means Level 1 syntax and cryptographic verification. It does not bind `who` to an identity, authorize a tool, establish complete logging, or verify HJS/JAC semantics. `archive_digest` is a local ordering digest, not a protocol event field or a trusted completeness anchor. Raw signed event members are preserved during export.
+
+For the four-verb flow, see [jep-e2e-demo](https://github.com/hjs-spec/jep-e2e-demo). The original unsigned examples are retained in [legacy_mock.py](jep_quickstart/LEGACY.md), accessible only by explicit import; default replay rejects that format.
+
+## Test
+
+```bash
+python -m pip install -e '.[test]' -r ../jep-api/requirements.txt
+JEP_API_SOURCE=../jep-api python -m pytest -q
+```
+
+Tests start an isolated local API subprocess with a temporary key store. They verify real signatures and rejection of tampered, duplicate, empty and historical archives.

@@ -8,7 +8,7 @@ from jep_quickstart import create_event
 def enrich_node(state: dict[str, str]) -> dict[str, str]:
     output = {**state, "summary": f"hello {state['user']}"}
     event = create_event("langgraph.node", "enrich_node", state, output, actor="langgraph")
-    output["jep_event_id"] = event.event_id
+    output["jep_event_nonce"] = event.nonce
     print("jep event:", event.to_dict())
     return output
 

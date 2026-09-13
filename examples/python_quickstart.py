@@ -1,6 +1,7 @@
 """Quickstart Python: create event, wrap a tool, export, replay."""
 
 import _bootstrap
+from uuid import uuid4
 
 from jep_quickstart import create_event, export_archive, replay_verify, wrap_tool
 
@@ -24,7 +25,7 @@ def main() -> None:
     result, tool_event = search(query="how to integrate JEP")
     events.append(tool_event)
 
-    archive = export_archive(events)
+    archive = export_archive(events, f"archives/demo-{uuid4().hex}.jep.jsonl")
     report = replay_verify(archive)
 
     print("tool result:", result)

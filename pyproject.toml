@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jep-quickstart"
+version = "0.6.0"
+description = "Signed JEP-Core-0.6 SDK and local API quickstart"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = ["jep-sdk-py>=0.6.2,<0.7"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+[tool.setuptools.packages.find]
+include = ["jep_quickstart*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

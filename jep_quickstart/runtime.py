@@ -1,4 +1,4 @@
-"""Small helpers over the installed JEP-Core-0.6 HTTP SDK."""
+"""Small helpers over the installed JEP Core 0.7 HTTP SDK."""
 
 from __future__ import annotations
 
@@ -34,8 +34,8 @@ def create_event(
             "aud": "jep-quickstart",
         }
     )
-    if not result.validation.valid or result.validation.profile != "jep-core-0.6":
-        raise ValueError("API did not return a valid JEP-Core-0.6 event")
+    if not result.validation.valid or result.validation.profile != "jep-core-0.7":
+        raise ValueError("API did not return a valid JEP Core 0.7 event")
     return result.event
 
 
@@ -90,8 +90,9 @@ def replay_verify(path: str | Path) -> dict[str, Any]:
             result = api.verify_event({"event": event, "mode": "archival"})
             if (
                 not result.valid
-                or result.level < 1
-                or result.profile != "jep-core-0.6"
+                or result.profile != "jep-core-0.7"
+                or result.checks.get("cryptographic") != "pass"
+                or result.checks.get("event_identity") != "pass"
                 or not result.event_hash
             ):
                 raise ValueError(f"Event verification failed: {result.errors}")
@@ -104,8 +105,8 @@ def replay_verify(path: str | Path) -> dict[str, Any]:
     return {
         "ok": True,
         "events": len(hashes),
-        "profile": "jep-core-0.6",
-        "level": 1,
+        "profile": "jep-core-0.7",
+        "checks": ["cryptographic", "event_identity"],
         "event_hashes": hashes,
         "archive_digest": "sha256:" + digest,
     }

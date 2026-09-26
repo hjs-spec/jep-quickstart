@@ -13,7 +13,7 @@ def test_signed_tool_and_archival_replay(tmp_path):
     wrapped = wrap_tool("addition", lambda a, b: a + b)
     result, event = wrapped(a=2, b=3)
     assert result == 5
-    assert event.jep == "1" and event.verb == "J" and event.sig
+    assert event.jep == "1" and event.id and event.verb == "J" and event.sig
     path = export_archive([event], tmp_path / "archive.jsonl")
     assert json.loads(path.read_text()) == event.to_dict()
     report = replay_verify(path)

@@ -1,15 +1,13 @@
-# JEP Quickstart
+# JEP Quickstart — JEP Core 0.7
 
-Create signed Judgment Event Protocol events with the installed Python SDK and verify them through the local JEP-Core-0.6 API. All default examples use real signatures; the small business tools are demonstrations.
+Create signed JEP Core 0.7 events with the Python SDK and verify them through
+the local JEP reference API.
 
-## Start a local API (terminal 1)
-
-Python 3.10 or newer is required. From the parent directory of this clone:
+## Start a local API
 
 ```bash
 git clone https://github.com/hjs-spec/jep-api.git
 cd jep-api
-git checkout v0.7.3
 python3 -m venv .venv
 . .venv/bin/activate
 python -m pip install -r requirements.txt
@@ -17,11 +15,11 @@ export JEP_STATE_DIR="$PWD/.local-state"
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-This starts a loopback development service and preserves its local verification keys across restarts. Keep that state directory to replay prior archives. This is not a live deployment; no public service or database is required. API software version 0.7.3 implements protocol profile `jep-core-0.6`, wire `jep: "1"`.
+The current API exposes protocol profile `jep-core-0.7` on versioned
+`/v0.7` endpoints. Historical pre-0.7 handling remains explicit and is not
+selected by fallback.
 
-The SDK defaults to `http://127.0.0.1:8000`. Set `JEP_API_URL` to another explicitly trusted API, and `JEP_API_KEY` if it requires a signing token. Archival verification relies on that API's trusted key store.
-
-## Install and run (terminal 2)
+## Install and run
 
 ```bash
 git clone https://github.com/hjs-spec/jep-quickstart.git
@@ -32,37 +30,70 @@ python -m pip install -e .
 make demo
 ```
 
-The Python example writes a uniquely named `archives/demo-*.jep.jsonl` and verifies each signed event in archival mode. Running the demo again preserves earlier archives.
-
 ```python
 from jep_quickstart import create_event, export_archive, replay_verify, wrap_tool
 
-event = create_event("agent.step", "first-event", {"goal": "try JEP"}, {"status": "started"})
-print(event.to_dict())
+event = create_event(
+    "agent.step",
+    "first-event",
+    {"goal": "try JEP"},
+    {"status": "started"},
+)
+print(event.id, event.to_dict())
+
 archive = export_archive([event], "archives/first.jep.jsonl")
 print(replay_verify(archive))
 ```
 
-`create_event` records application details inside a signed `J` event's `what`. `wrap_tool` calls the supplied function, then records its returned result; it does not authorize the tool or make tool execution and archive writing atomic. Handle recording failures in the application's execution policy.
+`create_event` records application details inside a signed Judgment event.
+It does not authorize a tool, establish factual truth, or make execution and
+recording atomic.
 
-## Examples and verification limits
+## What archival verification means
 
-- `examples/python_quickstart.py`: signed event, tool wrapper, export and real API verification.
-- `examples/mcp_quickstart.py`: simulated MCP tool with real event recording.
-- `examples/langgraph_quickstart.py`: graph-shaped function with real event recording.
-- `examples/openai_agents_quickstart.py`: illustrative middleware with real event recording.
+A successful replay requires current JEP Core 0.7 archival validation,
+including:
 
-These examples do not install or execute the actual MCP, LangGraph or OpenAI Agents frameworks. Use the dedicated adapter repositories for those integrations.
+- `status == valid`;
+- `cryptographic == pass`;
+- `event_identity == pass`;
+- a computed Event Hash.
 
-A successful report means Level 1 syntax and cryptographic verification. It does not bind `who` to an identity, authorize a tool, establish complete logging, or verify HJS/JAC semantics. `archive_digest` is a local ordering digest, not a protocol event field or a trusted completeness anchor. Raw signed event members are preserved during export.
+It does **not** imply:
 
-For the four-verb flow, see [jep-e2e-demo](https://github.com/hjs-spec/jep-e2e-demo). The original unsigned examples are retained in [legacy_mock.py](jep_quickstart/LEGACY.md), accessible only by explicit import; default replay rejects that format.
+- actor binding unless a trust profile required and performed it;
+- freshness or acceptance eligibility;
+- complete logging;
+- chain/cascade semantics;
+- authorization validity;
+- factual truth or legal effect.
+
+`archive_digest` is a local ordering digest for this quickstart, not a JEP
+Core event field or completeness anchor.
+
+## Core 0.7 differences from older examples
+
+- every event has stable `id`;
+- Event Identity is `(who,id)`;
+- Core does not require a top-level nonce;
+- validation uses independent checks instead of Levels 0–4;
+- Event Hash identifies the exact signed artifact, not the logical event;
+- D/T/V have verb-specific minimum structures;
+- chain and policy meaning remain outside Core.
+
+Historical mock examples remain isolated behind explicitly named legacy
+modules; they are not treated as current JEP Core events.
 
 ## Test
 
 ```bash
-python -m pip install -e '.[test]' -r ../jep-api/requirements.txt
+python -m pip install -e '.[test]'
 JEP_API_SOURCE=../jep-api python -m pytest -q
 ```
 
-Tests start an isolated local API subprocess with a temporary key store. They verify real signatures and rejection of tampered, duplicate, empty and historical archives.
+## Related
+
+- JEP Core: https://github.com/hjs-spec/jep-core
+- JEP API: https://github.com/hjs-spec/jep-api
+- Python SDK: https://github.com/hjs-spec/sdk-py
+- Internet-Draft: https://datatracker.ietf.org/doc/draft-wang-jep-judgment-event-protocol/

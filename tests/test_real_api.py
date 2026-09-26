@@ -17,7 +17,7 @@ def test_signed_tool_and_archival_replay(tmp_path):
     path = export_archive([event], tmp_path / "archive.jsonl")
     assert json.loads(path.read_text()) == event.to_dict()
     report = replay_verify(path)
-    assert report["ok"] and report["level"] == 1
+    assert report["ok"] and report["profile"] == "jep-core-0.7"
     assert replay_verify(path) == report  # archival verification is repeatable
     with pytest.raises(FileExistsError):
         export_archive([event], path)

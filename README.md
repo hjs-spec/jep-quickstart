@@ -1,6 +1,6 @@
 # JEP Quickstart
 
-Create signed Judgment Event Protocol events with the installed Python SDK and verify them through the local JEP-Core-0.6 API. All default examples use real signatures; the small business tools are demonstrations.
+Create signed Judgment Event Protocol events with the installed Python SDK and verify them through the local JEP Core 0.7 API. All default examples use real signatures; the small business tools are demonstrations.
 
 ## Start a local API (terminal 1)
 
@@ -17,7 +17,7 @@ export JEP_STATE_DIR="$PWD/.local-state"
 python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
-This starts a loopback development service and preserves its local verification keys across restarts. Keep that state directory to replay prior archives. This is not a live deployment; no public service or database is required. API software version 0.7.3 implements protocol profile `jep-core-0.6`, wire `jep: "1"`.
+This starts a loopback development service and preserves its local verification keys across restarts. Keep that state directory to replay prior archives. This is not a live deployment; no public service or database is required. The current API exposes protocol profile `jep-core-0.7` on versioned `/v0.7` endpoints, wire `jep: "1"`. Historical pre-0.7 verification is explicit and is never selected by fallback.
 
 The SDK defaults to `http://127.0.0.1:8000`. Set `JEP_API_URL` to another explicitly trusted API, and `JEP_API_KEY` if it requires a signing token. Archival verification relies on that API's trusted key store.
 
@@ -54,7 +54,7 @@ print(replay_verify(archive))
 
 These examples do not install or execute the actual MCP, LangGraph or OpenAI Agents frameworks. Use the dedicated adapter repositories for those integrations.
 
-A successful report means Level 1 syntax and cryptographic verification. It does not bind `who` to an identity, authorize a tool, establish complete logging, or verify HJS/JAC semantics. `archive_digest` is a local ordering digest, not a protocol event field or a trusted completeness anchor. Raw signed event members are preserved during export.
+A successful report means the requested JEP Core 0.7 checks passed. The quickstart requires `syntax` and `cryptographic` checks and reports Event Identity separately. It does not by itself establish actor/key binding, authorize a tool, establish complete logging, or verify chain/policy semantics. `archive_digest` is a local ordering digest, not a protocol event field or a trusted completeness anchor. Raw signed event members are preserved during export.
 
 For the four-verb flow, see [jep-e2e-demo](https://github.com/hjs-spec/jep-e2e-demo). The original unsigned examples are retained in [legacy_mock.py](jep_quickstart/LEGACY.md), accessible only by explicit import; default replay rejects that format.
 

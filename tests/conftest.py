@@ -51,7 +51,7 @@ def api_server(tmp_path_factory):
             for _ in range(100):
                 try:
                     with urllib.request.urlopen(url + "/health", timeout=1) as response:
-                        assert json.load(response)["profile"] == "jep-core-0.6"
+                        assert json.load(response)["profile"] == "jep-core-0.7"
                     break
                 except OSError:
                     if proc.poll() is not None:

@@ -16,7 +16,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: hjs-spec/jep-api
-          ref: 45082b3e9e9e81f35596311d6a686ae5fdae5427
+          ref: 9d02c2a9a8a34e1123b1d80de8fd22028e1109cb
           path: .test-api
       - run: python -m pip install build twine '.[test]' -r .test-api/requirements.txt
       - run: python -m pytest -q

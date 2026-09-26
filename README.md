@@ -97,3 +97,5 @@ JEP_API_SOURCE=../jep-api python -m pytest -q
 - JEP API: https://github.com/hjs-spec/jep-api
 - Python SDK: https://github.com/hjs-spec/sdk-py
 - Internet-Draft: https://datatracker.ietf.org/doc/draft-wang-jep-judgment-event-protocol/
+
+CI and release tests pin the reference API to `9d02c2a9a8a34e1123b1d80de8fd22028e1109cb` (API software 0.8.0, Core profile 0.7).

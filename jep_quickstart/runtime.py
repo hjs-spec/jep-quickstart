@@ -91,6 +91,7 @@ def replay_verify(path: str | Path) -> dict[str, Any]:
             if (
                 not result.valid
                 or result.profile != "jep-core-0.7"
+                or result.checks.get("syntax") != "pass"
                 or result.checks.get("cryptographic") != "pass"
                 or result.checks.get("event_identity") != "pass"
                 or not result.event_hash
@@ -106,7 +107,7 @@ def replay_verify(path: str | Path) -> dict[str, Any]:
         "ok": True,
         "events": len(hashes),
         "profile": "jep-core-0.7",
-        "checks": ["cryptographic", "event_identity"],
+        "checks": ["syntax", "cryptographic", "event_identity"],
         "event_hashes": hashes,
         "archive_digest": "sha256:" + digest,
     }

@@ -1,12 +1,16 @@
-# JEP Quickstart — JEP Core 0.7
+# JEP HTTP Quickstart — JEP Core 0.7
 
 Create signed JEP Core 0.7 events with the Python SDK and verify them through
 the local JEP reference API.
 
+For a first signed event without running a service, use the
+[Agent SDK local create/export/verify example](https://github.com/hjs-spec/jep-agent-sdk#local-create--export--independent-verification).
+This repository is the HTTP path: an API owns the signing key and clients send requests.
+
 ## Start a local API
 
 ```bash
-git clone https://github.com/hjs-spec/jep-api.git
+git clone --branch v0.8.5 --depth 1 https://github.com/hjs-spec/jep-api.git
 cd jep-api
 python3 -m venv .venv
 . .venv/bin/activate
@@ -21,8 +25,11 @@ selected by fallback.
 
 ## Install and run
 
+Keep the API terminal running and open a second terminal for these commands.
+The shell examples use Bash; Windows users can use WSL or adapt virtual-environment activation.
+
 ```bash
-git clone https://github.com/hjs-spec/jep-quickstart.git
+git clone --branch v0.7.0 --depth 1 https://github.com/hjs-spec/jep-quickstart.git
 cd jep-quickstart
 python3 -m venv .venv
 . .venv/bin/activate
@@ -98,4 +105,8 @@ JEP_API_SOURCE=../jep-api python -m pytest -q
 - Python SDK: https://github.com/hjs-spec/sdk-py
 - Internet-Draft: https://datatracker.ietf.org/doc/draft-wang-jep-judgment-event-protocol/
 
-CI and release tests pin the reference API to `e58160184a65849639d1a2c7e318066fe146eb56` (API software 0.8.4, Core profile 0.7).
+CI and release tests pin the reference API to `9381cddf0dafba55cd07aa7fc4d4316c95440d08` (API software 0.8.5, Core profile 0.7).
+
+The commands above select a versioned release combination. For development, use
+separate source checkouts and run the same tests against an explicitly selected API revision.
+A successful local run does not configure or validate a hosted production service.

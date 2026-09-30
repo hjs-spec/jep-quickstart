@@ -3,9 +3,10 @@
 Create signed JEP Core 0.7 events with the Python SDK and verify them through
 the local JEP reference API.
 
-For a first signed event without running a service, use the
-[Agent SDK local create/export/verify example](https://github.com/hjs-spec/jep-agent-sdk#local-create--export--independent-verification).
-This repository is the HTTP path: an API owns the signing key and clients send requests.
+Start with the [packaged Core sample](https://github.com/hjs-spec/jep-core#verify-your-first-event)
+for a first verification. This repository provides HTTP integration: an API owns
+the signing key and clients send requests. For local signed recording, use the
+[Agent SDK](https://github.com/hjs-spec/jep-agent-sdk#local-create--export--independent-verification).
 
 ## Start a local API
 
@@ -78,18 +79,9 @@ It does **not** imply:
 `archive_digest` is a local ordering digest for this quickstart, not a JEP
 Core event field or completeness anchor.
 
-## Core 0.7 differences from older examples
-
-- every event has stable `id`;
-- Event Identity is `(who,id)`;
-- Core does not require a top-level nonce;
-- validation uses independent checks instead of Levels 0–4;
-- Event Hash identifies the exact signed artifact, not the logical event;
-- D/T/V have verb-specific minimum structures;
-- chain and policy meaning remain outside Core.
-
-Historical mock examples remain isolated behind explicitly named legacy
-modules; they are not treated as current JEP Core events.
+Core event structure, identity and validation requirements are maintained in the
+[Core contract](https://github.com/hjs-spec/jep-core#current-contract). Historical
+mock examples remain behind explicit [legacy modules](jep_quickstart/LEGACY.md).
 
 ## Test
 
@@ -109,4 +101,3 @@ CI and release tests pin the reference API to `9381cddf0dafba55cd07aa7fc4d4316c9
 
 The commands above select a versioned release combination. For development, use
 separate source checkouts and run the same tests against an explicitly selected API revision.
-A successful local run does not configure or validate a hosted production service.

@@ -21,8 +21,7 @@ python -m uvicorn main:app --host 127.0.0.1 --port 8000
 ```
 
 The current API exposes protocol profile `jep-core-0.7` on versioned
-`/v0.7` endpoints. Historical pre-0.7 handling remains explicit and is not
-selected by fallback.
+`/v0.7` endpoints.
 
 ## Install and run
 
@@ -67,21 +66,14 @@ including:
 - `event_identity == pass`;
 - a computed Event Hash.
 
-It does **not** imply:
-
-- actor binding unless a trust profile required and performed it;
-- freshness or acceptance eligibility;
-- complete logging;
-- chain/cascade semantics;
-- authorization validity;
-- factual truth or legal effect.
+These results verify the recorded event. Actor trust, authorization and live
+acceptance require their own configured checks.
 
 `archive_digest` is a local ordering digest for this quickstart, not a JEP
 Core event field or completeness anchor.
 
-Core event structure, identity and validation requirements are maintained in the
-[Core contract](https://github.com/hjs-spec/jep-core#current-contract). Historical
-mock examples remain behind explicit [legacy modules](jep_quickstart/LEGACY.md).
+See the [Core contract](https://github.com/hjs-spec/jep-core#current-contract) for
+event structure and validation requirements.
 
 ## Test
 
@@ -90,6 +82,9 @@ python -m pip install -e '.[test]'
 JEP_API_SOURCE=../jep-api python -m pytest -q
 ```
 
+CI pins API 0.8.5 at `9381cddf0dafba55cd07aa7fc4d4316c95440d08`.
+Use `JEP_API_SOURCE` to select another API checkout for development tests.
+
 ## Related
 
 - JEP Core: https://github.com/hjs-spec/jep-core
@@ -97,7 +92,4 @@ JEP_API_SOURCE=../jep-api python -m pytest -q
 - Python SDK: https://github.com/hjs-spec/sdk-py
 - Internet-Draft: https://datatracker.ietf.org/doc/draft-wang-jep-judgment-event-protocol/
 
-CI and release tests pin the reference API to `9381cddf0dafba55cd07aa7fc4d4316c95440d08` (API software 0.8.5, Core profile 0.7).
-
-The commands above select a versioned release combination. For development, use
-separate source checkouts and run the same tests against an explicitly selected API revision.
+- [Historical mock examples](jep_quickstart/LEGACY.md)

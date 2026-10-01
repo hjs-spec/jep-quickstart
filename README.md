@@ -11,7 +11,7 @@ the signing key and clients send requests. For local signed recording, use the
 ## Start a local API
 
 ```bash
-git clone --branch v0.8.5 --depth 1 https://github.com/hjs-spec/jep-api.git
+git clone --branch v0.8.6 --depth 1 https://github.com/hjs-spec/jep-api.git
 cd jep-api
 python3 -m venv .venv
 . .venv/bin/activate
@@ -29,7 +29,7 @@ Keep the API terminal running and open a second terminal for these commands.
 The shell examples use Bash; Windows users can use WSL or adapt virtual-environment activation.
 
 ```bash
-git clone --branch v0.7.0 --depth 1 https://github.com/hjs-spec/jep-quickstart.git
+git clone --branch v0.7.1 --depth 1 https://github.com/hjs-spec/jep-quickstart.git
 cd jep-quickstart
 python3 -m venv .venv
 . .venv/bin/activate
@@ -55,6 +55,54 @@ print(replay_verify(archive))
 `create_event` records application details inside a signed Judgment event.
 It does not authorize a tool, establish factual truth, or make execution and
 recording atomic.
+
+## Recover after recording fails
+
+Quickstart 0.7.1 requires API **0.8.6+** for safe creation retries. `wrap_tool`
+raises `RecordingError` if it cannot record a call. Check `call_executed` before
+deciding what to do:
+
+| Failure state | Next step |
+|---|---|
+| `call_executed == False` | The callable did not run. Correct the input serialization problem. |
+| `call_executed == True`, `request` available | The callable returned; its result is in `result`. Keep the exception and retry only the recording after resolving the transport/server failure. |
+| `call_executed == True`, `request is None` | The result could not be serialized. Recover manually using `result`; do not repeat the business call. |
+
+```python
+from jep_quickstart import RecordingError, wrap_tool
+
+pending = None
+tool = wrap_tool("addition", lambda a, b: a + b)
+try:
+    result, event = tool(a=2, b=3)
+except RecordingError as error:
+    pending = error
+    print("Call executed:", error.call_executed, "Result:", error.result)
+```
+
+After resolving a timeout or temporary service failure, recover the original
+signed event without calling `tool` again:
+
+```python
+if pending is not None and pending.call_executed and pending.request is not None:
+    event = pending.retry_recording()
+    result = pending.result
+```
+
+`retry_recording()` sends the same saved request and `id`; it never invokes the
+callable. HTTP 409 means the ID belongs to different request content: stop and
+reconcile it. Other business exceptions remain the original exception and are
+not converted to `RecordingError`.
+
+The recovery object lives in memory. For process-restart recovery, retain
+`pending.request` in your application's durable storage and resend it through
+`JEPClient.create_event` after recovery. It includes the captured inputs and
+result, so store it with appropriate access controls. A process crash between
+business execution and saving that request still needs application reconciliation.
+
+For direct `create_event` calls, choose and persist `event_id` before sending;
+reuse it with unchanged arguments if a response is lost. Omitted IDs are generated
+anew on each direct call. Verification and acceptance remain separate operations.
 
 ## What archival verification means
 
@@ -82,7 +130,7 @@ python -m pip install -e '.[test]'
 JEP_API_SOURCE=../jep-api python -m pytest -q
 ```
 
-CI pins API 0.8.5 at `9381cddf0dafba55cd07aa7fc4d4316c95440d08`.
+CI pins API 0.8.6 at `f606050a5779ee81c332cc028ab1137ff57a443c`.
 Use `JEP_API_SOURCE` to select another API checkout for development tests.
 
 ## Related
@@ -93,3 +141,4 @@ Use `JEP_API_SOURCE` to select another API checkout for development tests.
 - Internet-Draft: https://datatracker.ietf.org/doc/draft-wang-jep-judgment-event-protocol/
 
 - [Historical mock examples](jep_quickstart/LEGACY.md)
+- [Contributing and private security reports](https://github.com/hjs-spec/.github/blob/main/CONTRIBUTING.md)

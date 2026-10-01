@@ -5,8 +5,11 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+from copy import deepcopy
+from functools import wraps
 from pathlib import Path
 from typing import Any, Callable
+from uuid import uuid4
 
 from jep import JEPClient, JEPEvent
 
@@ -18,12 +21,14 @@ def client() -> JEPClient:
     )
 
 
-def create_event(
-    kind: str, name: str, input: dict[str, Any], output: Any, actor: str = "quickstart"
-) -> JEPEvent:
-    """Record a signed Judgment; application details stay inside what."""
-    result = client().create_event(
+def _snapshot(value):
+    return json.loads(json.dumps(value, ensure_ascii=False, allow_nan=False))
+
+
+def _request(kind, name, input, output, actor, event_id):
+    return _snapshot(
         {
+            "id": event_id,
             "verb": "J",
             "who": actor,
             "what": {
@@ -34,32 +39,92 @@ def create_event(
             "aud": "jep-quickstart",
         }
     )
+
+
+def _submit_event(request) -> JEPEvent:
+    result = client().create_event(deepcopy(request))
     if not result.validation.valid or result.validation.profile != "jep-core-0.7":
         raise ValueError("API did not return a valid JEP Core 0.7 event")
     return result.event
 
 
-def wrap_tool(
-    name: str, func: Callable[..., Any], actor: str = "quickstart"
-) -> Callable:
+class RecordingError(RuntimeError):
+    """Recording failed; call_executed describes whether the wrapped business call ran."""
+
+    def __init__(self, *, call_executed, result=None, request=None):
+        super().__init__(
+            "Business call completed; do not rerun it. Recover the recording separately."
+            if call_executed
+            else "Recording inputs could not be prepared; business call did not run."
+        )
+        self.call_executed = call_executed
+        self.result = result
+        self._request = deepcopy(request)
+
+    @property
+    def request(self):
+        """A copy of the frozen request; may contain sensitive inputs and results."""
+        return deepcopy(self._request)
+
+    def retry_recording(self) -> JEPEvent:
+        """Retry only the unchanged request against API 0.8.6+; never invokes the callable."""
+        if self._request is None:
+            raise ValueError("No serializable recording request is available; resolve manually")
+        try:
+            return _submit_event(self._request)
+        except Exception as exc:
+            raise RecordingError(
+                call_executed=self.call_executed, result=self.result, request=self._request
+            ) from exc
+
+
+def create_event(
+    kind: str,
+    name: str,
+    input: dict[str, Any],
+    output: Any,
+    actor: str = "quickstart",
+    *,
+    event_id: str | None = None,
+) -> JEPEvent:
+    """Record a signed Judgment. Reuse event_id and all inputs to recover a create request."""
+    request = _request(
+        kind,
+        name,
+        input,
+        output,
+        actor,
+        event_id if event_id is not None else f"urn:uuid:{uuid4()}",
+    )
+    return _submit_event(request)
+
+
+def wrap_tool(name: str, func: Callable[..., Any], actor: str = "quickstart") -> Callable:
+    @wraps(func)
     def wrapped(**kwargs: Any):
+        try:
+            inputs = _snapshot(kwargs)
+        except Exception as exc:
+            raise RecordingError(call_executed=False) from exc
+        event_id = f"urn:uuid:{uuid4()}"
         result = func(**kwargs)
-        return result, create_event("tool.call", name, kwargs, result, actor=actor)
+        request = None
+        try:
+            request = _request("tool.call", name, inputs, result, actor, event_id)
+            return result, _submit_event(request)
+        except Exception as exc:
+            raise RecordingError(call_executed=True, result=result, request=request) from exc
 
     return wrapped
 
 
-def export_archive(
-    events: list[JEPEvent], path: str | Path = "archives/demo.jep.jsonl"
-) -> Path:
+def export_archive(events: list[JEPEvent], path: str | Path = "archives/demo.jep.jsonl") -> Path:
     archive = Path(path)
     archive.parent.mkdir(parents=True, exist_ok=True)
     # x mode avoids silently replacing an earlier evidence archive.
     with archive.open("x", encoding="utf-8") as handle:
         for event in events:
-            handle.write(
-                json.dumps(event.to_dict(), ensure_ascii=False, allow_nan=False) + "\n"
-            )
+            handle.write(json.dumps(event.to_dict(), ensure_ascii=False, allow_nan=False) + "\n")
     return archive
 
 

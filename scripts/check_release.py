@@ -15,6 +15,8 @@ def check(raw):
     assert metadata["Version"] == version, "Built package has a different version"
     normalize = lambda text: re.sub(r"[-_.]+", "-", text).lower()
     assert normalize(metadata["Name"]) == normalize(project["name"]), "Wrong distribution name"
+    assert metadata["License-Expression"] == project["license"], "Wrong license expression"
+    assert sorted(metadata.get_all("License-File", [])) == sorted(project["license-files"])
 
 wheels, sources = list(Path("dist").glob("*.whl")), list(Path("dist").glob("*.tar.gz"))
 assert len(wheels) == len(sources) == 1, "Expected one wheel and one source distribution"
@@ -22,8 +24,14 @@ with zipfile.ZipFile(wheels[0]) as archive:
     names = [name for name in archive.namelist() if name.endswith(".dist-info/METADATA")]
     assert len(names) == 1
     check(archive.read(names[0]))
+    license_dir = names[0].rsplit("/", 1)[0] + "/licenses/"
+    for name in project["license-files"]:
+        assert archive.read(license_dir + name) == Path(name).read_bytes(), name
 with tarfile.open(sources[0]) as archive:
     names = [name for name in archive.getnames() if name.count("/") == 1 and name.endswith("/PKG-INFO")]
     assert len(names) == 1
     check(archive.extractfile(names[0]).read())
+    root = names[0].split("/", 1)[0]
+    for name in project["license-files"]:
+        assert archive.extractfile(root + "/" + name).read() == Path(name).read_bytes(), name
 print(f"Release metadata verified: {project['name']} {version}")

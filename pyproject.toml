@@ -1,14 +1,16 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77.0.3"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "jep-quickstart"
-version = "0.7.1"
+version = "0.7.2"
 description = "Signed JEP Core 0.7 SDK and local API quickstart"
 readme = "README.md"
+license = "BSD-3-Clause"
+license-files = ["LICENSE", "NOTICE.md"]
 requires-python = ">=3.10"
-dependencies = ["jep-sdk-py>=0.7,<0.8"]
+dependencies = ["jep-sdk-py>=0.7.1,<0.8"]
 
 [project.optional-dependencies]
 test = ["pytest>=8"]

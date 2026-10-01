@@ -11,7 +11,7 @@ the signing key and clients send requests. For local signed recording, use the
 ## Start a local API
 
 ```bash
-git clone --branch v0.8.6 --depth 1 https://github.com/hjs-spec/jep-api.git
+git clone --branch v0.8.7 --depth 1 https://github.com/hjs-spec/jep-api.git
 cd jep-api
 python3 -m venv .venv
 . .venv/bin/activate
@@ -29,7 +29,7 @@ Keep the API terminal running and open a second terminal for these commands.
 The shell examples use Bash; Windows users can use WSL or adapt virtual-environment activation.
 
 ```bash
-git clone --branch v0.7.1 --depth 1 https://github.com/hjs-spec/jep-quickstart.git
+git clone --branch v0.7.2 --depth 1 https://github.com/hjs-spec/jep-quickstart.git
 cd jep-quickstart
 python3 -m venv .venv
 . .venv/bin/activate
@@ -58,7 +58,7 @@ recording atomic.
 
 ## Recover after recording fails
 
-Quickstart 0.7.1 requires API **0.8.6+** for safe creation retries. `wrap_tool`
+Quickstart 0.7.1 and later require API **0.8.6+** for safe creation retries. `wrap_tool`
 raises `RecordingError` if it cannot record a call. Check `call_executed` before
 deciding what to do:
 
@@ -130,7 +130,7 @@ python -m pip install -e '.[test]'
 JEP_API_SOURCE=../jep-api python -m pytest -q
 ```
 
-CI pins API 0.8.6 at `f606050a5779ee81c332cc028ab1137ff57a443c`.
+CI pins API 0.8.7 at `24bf1ff6d158f1329d8e5397c58e896786efef06`.
 Use `JEP_API_SOURCE` to select another API checkout for development tests.
 
 ## Related
@@ -142,3 +142,7 @@ Use `JEP_API_SOURCE` to select another API checkout for development tests.
 
 - [Historical mock examples](jep_quickstart/LEGACY.md)
 - [Contributing and private security reports](https://github.com/hjs-spec/.github/blob/main/CONTRIBUTING.md)
+
+## License
+
+[BSD-3-Clause](LICENSE); see [licensing scope and notices](NOTICE.md).

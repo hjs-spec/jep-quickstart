@@ -1,3 +1,12 @@
+# Software 0.7.2
+
+- Use Python SDK 0.7.1+ and test against the API 0.8.7 release so the documented dependency path includes the new license materials.
+
+- License original Quickstart code, examples and implementation documentation under BSD-3-Clause.
+- Include LICENSE and NOTICE.md in wheel and source distributions with SPDX metadata, and check those files during CI and release validation.
+
+Runtime behavior and JEP Core 0.7 semantics are unchanged. Existing published artifacts are not overwritten.
+
 # Release 0.7.1
 
 - Distinguish recording failures before and after a wrapped business call with `RecordingError.call_executed`; retain the completed result and serializable request for recovery.
